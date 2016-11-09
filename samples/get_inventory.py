@@ -40,7 +40,6 @@ def _get_inventory(handle, subject=None):
         for mgmt in mgmts:
             fws = handle.query_children(in_mo=mgmt, class_id="FirmwareRunning")
             for fw in fws:
-                print fw
                 if fw.deployment == 'system': firmware = fw.version
         print( rack.model, rack.serial, _convert_name(rack.dn), firmware, rack.mfg_time)
 
