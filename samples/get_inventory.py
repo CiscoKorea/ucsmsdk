@@ -16,6 +16,15 @@ def _convert_name( name):
     else:
         return name
 
+def _fault_target( name):
+    if name.startswith('sys/'):
+        return name.split('/')[1]
+    elif name.startswith('fabric/lan/'):
+        items = name.split('/')
+        return items[ len(items)-2]
+    else:
+        return '/'.join(name.split('/')[0:-1])
+
 def _get_inventory(handle, subject=None):
     inventories = []
     chassises = handle.query_classid(class_id='EquipmentChassis')
@@ -53,14 +62,33 @@ def _get_inventory(handle, subject=None):
                 if fw.deployment == 'system': firmware = fw.version
         print ( network.model, network.serial, network.oob_if_ip, _convert_name(network.dn), firmware)
 
+def _print_fault_info( faults):
+    for fault in faults:
+        print( fault.severity, fault.code, _fault_target(fault.dn), fault.created, fault.descr, fault.occur)
+
+def _get_faults(handle):
+    #severity=critial
+    faults = handle.query_classid(class_id='FaultInst', filter_str='(severity,"critical",type="eq")')
+    if faults:
+        _print_fault_info(faults)
+    #severity=major
+    faults = handle.query_classid(class_id='FaultInst', filter_str='(severity,"major",type="eq")')
+    if faults:
+        _print_fault_info(faults)
+    #severity=warning
+    faults = handle.query_classid(class_id='FaultInst', filter_str='(severity,"warning",type="eq")')
+    if faults:
+        _print_fault_info(faults)         
 
 
 def main():
     try:
         global handle
         handle = ucs_login()
+        #get faults
+        _get_faults(handle)
         # get inventory 
-        _get_inventory(handle)
+        #_get_inventory(handle)
         ucs_logout(handle)
     except:
         ucs_logout(handle)
